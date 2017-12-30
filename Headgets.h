@@ -171,14 +171,6 @@ namespace hdg {
 			return msg.wParam;
 		}
 
-		bool isOpen() {
-			return open;
-		}
-
-		void setTitle(std::string str) {
-			title = str;
-		}
-
 		static LRESULT CALLBACK _WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			return instance->RealWndProc(hwnd, msg, wParam, lParam); 
 		}
@@ -196,6 +188,7 @@ namespace hdg {
 					break;
 				case WM_DESTROY:
 					postSimpleEvent(hdg::EventType::Destroyed);
+					open = false;
 					PostQuitMessage(0);
 					break;
 				//Mouse events
@@ -267,7 +260,7 @@ namespace hdg {
 			x = newX;
 			y = newY;
 
-			if (SetWindowPos(window, (HWND) -1, newX, newY, -1, -1, SWP_NOZORDER | SWP_NOSIZE) == 0) {
+			if (SetWindowPos(window, (HWND) -1, x, y, -1, -1, SWP_NOZORDER | SWP_NOSIZE) == 0) {
 				_reportLastError("moveTo()");
 			}
 		}
@@ -286,6 +279,15 @@ namespace hdg {
 
 		HWND getNativeHandle() {
 			return window;
+		}
+
+		bool isOpen() {
+			return open;
+		}
+
+		void setTitle(std::string str) {
+			title = str;
+			SetWindowText(window, title.c_str());
 		}
 
 		static Application *instance;

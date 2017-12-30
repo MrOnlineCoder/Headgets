@@ -6,11 +6,8 @@ void eventProcessor(hdg::Event ev) {
 	}
 
 	if (ev.type == hdg::EventType::MouseEvent && ev.mouse == hdg::MouseEvent::LeftPressed) {
-		ev.app->moveBy(5, 5);
-	}
-
-	if (ev.type == hdg::EventType::Resized) {
-		//hdg::showMessageBox("resized to  w: "+std::to_string(ev.num1)+", h: "+std::to_string(ev.num2));
+		ev.app->moveTo(50, 50);
+		ev.app->setTitle("Test App X="+std::to_string(ev.app->getX())+" Y="+std::to_string(ev.app->getY()));
 	}
 }
 

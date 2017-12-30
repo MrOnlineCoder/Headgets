@@ -169,6 +169,20 @@ void hdg::Application::moveBy(int dX, int dY);
 Moves window by delta X and delta Y. Same as
 moveTo(x+dX, y+dY);
 
+```cpp
+HWND hdg::Application::getNativeHandle();
+```
+Returns native Win32 HWND window handle
+
+```cpp
+bool hdg::Application::isOpen();
+```
+Returns if window is open or not
+
+```cpp
+void hdg::Application::setTitle(std::string title);
+```
+Sets window title
 
 ## Utilites
 
