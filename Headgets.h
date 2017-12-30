@@ -187,7 +187,7 @@ namespace hdg {
 					DestroyWindow(hwnd);
 					break;
 				case WM_DESTROY:
-					postSimpleEvent(hdg::EventType::Destroyed, hwnd);
+					postSimpleEvent(hdg::EventType::Destroyed);
 					PostQuitMessage(0);
 					break;
 				//Mouse events
@@ -269,7 +269,7 @@ namespace hdg {
 		}
 
 		//Helper function to send an event to user quickly
-		void postSimpleEvent(hdg::EventType type, HWND wnd=0, int n1=0, int n2=0) {
+		void postSimpleEvent(hdg::EventType type, HWND wnd=NULL, int n1=0, int n2=0) {
 			hdg::Event ev;
 			ev.type = type;
 			ev.handle = wnd;
