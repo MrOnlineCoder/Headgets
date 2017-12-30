@@ -36,6 +36,7 @@
 #endif
 
 #include <Windows.h>
+#include <Windowsx.h>
 
 #include <string>
 #include <functional>
@@ -74,8 +75,16 @@ namespace hdg {
 	enum class EventType {
 		Created = 0,
 		Resized,
+		MouseEvent,
 		Closed,
 		Destroyed
+	};
+
+	enum class MouseEvent {
+		LeftPressed = WM_LBUTTONDOWN,
+		RightPressed = WM_RBUTTONDOWN,
+		LeftReleased = WM_LBUTTONUP,
+		RightReleased = WM_RBUTTONUP
 	};
 
 	//Event struct
@@ -89,8 +98,17 @@ namespace hdg {
 		int num1;
 		int num2;
 
+		hdg::MouseEvent mouse;
+
 		HWND handle;
 	};
+
+	/*============== Widgets ================*/
+
+	class Widget {
+		Widget();
+	};
+
 
 	/*============== Application ============*/
 	class Application {
@@ -159,18 +177,34 @@ namespace hdg {
 
 		LRESULT CALLBACK RealWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 			switch(msg) {
+				//Create and destroy events
 				case WM_CREATE:
-					postEvent(hdg::EventType::Created, hwnd);
+					postSimpleEvent(hdg::EventType::Created, hwnd);
 					return 0;
 					break;
 				case WM_CLOSE:
-					postEvent(hdg::EventType::Closed, hwnd);
+					postSimpleEvent(hdg::EventType::Closed, hwnd);
 					DestroyWindow(hwnd);
 					break;
 				case WM_DESTROY:
-					postEvent(hdg::EventType::Destroyed, hwnd);
+					postSimpleEvent(hdg::EventType::Destroyed, hwnd);
 					PostQuitMessage(0);
 					break;
+				//Mouse events
+				case WM_LBUTTONUP:
+				case WM_LBUTTONDOWN:
+				case WM_RBUTTONUP:
+				case WM_RBUTTONDOWN: {
+					hdg::Event ev = {
+						hdg::EventType::MouseEvent,
+						GET_X_LPARAM(lParam),
+						GET_Y_LPARAM(lParam),
+						static_cast<hdg::MouseEvent>(msg),
+						hwnd
+					};
+					postEvent(ev);
+					break;
+				}
 				default:
 					return DefWindowProc(hwnd, msg, wParam, lParam);
 				}
@@ -180,6 +214,22 @@ namespace hdg {
 			eventCallback = func;
 
 			if (!eventCallback) _fatal("Failed to set event callback");
+		}
+
+		int getX() {
+			return x;
+		}
+
+		int getY() {
+			return y;
+		}
+
+		int getWidth() {
+			return width;
+		}
+
+		int getHeight() {
+			return height;
 		}
 
 		static Application *instance;
@@ -219,7 +269,7 @@ namespace hdg {
 		}
 
 		//Helper function to send an event to user quickly
-		void postEvent(hdg::EventType type, HWND wnd=0, int n1=0, int n2=0) {
+		void postSimpleEvent(hdg::EventType type, HWND wnd=0, int n1=0, int n2=0) {
 			hdg::Event ev;
 			ev.type = type;
 			ev.handle = wnd;
@@ -227,6 +277,10 @@ namespace hdg {
 			ev.num2 = n2;
 
 
+			if (eventCallback) eventCallback(ev);
+		}
+
+		void postEvent(hdg::Event ev) {
 			if (eventCallback) eventCallback(ev);
 		}
 
@@ -242,6 +296,10 @@ namespace hdg {
 		//Size
 		int width;
 		int height;
+
+		//Pos
+		int x;
+		int y;
 
 		//Is window open?
 		bool open;
