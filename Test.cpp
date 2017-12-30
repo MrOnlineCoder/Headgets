@@ -1,16 +1,16 @@
 #include "Headgets.h"
 
 void eventProcessor(hdg::Event ev) {
-	if (ev.type == hdg::EventType::Created) {
-		hdg::showMessageBox("<Created> event received!");
-	}
-
 	if (ev.type == hdg::EventType::Closed) {
-		hdg::showMessageBox("Window closed :(", "Oh", hdg::MessageBoxType::Warning);
+		//hdg::showMessageBox("Window closed :(", "Oh", hdg::MessageBoxType::Warning);
 	}
 
 	if (ev.type == hdg::EventType::MouseEvent && ev.mouse == hdg::MouseEvent::LeftPressed) {
-		hdg::showMessageBox("* click! * on x: "+std::to_string(ev.num1)+", y: "+std::to_string(ev.num2));
+		ev.app->moveBy(5, 5);
+	}
+
+	if (ev.type == hdg::EventType::Resized) {
+		//hdg::showMessageBox("resized to  w: "+std::to_string(ev.num1)+", h: "+std::to_string(ev.num2));
 	}
 }
 

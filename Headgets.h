@@ -74,13 +74,18 @@ namespace hdg {
 	/*============== Events ============*/
 	enum class EventType {
 		Created = 0,
+
 		Resized,
+		Moved,
+
 		MouseEvent,
+
 		Closed,
 		Destroyed
 	};
 
 	enum class MouseEvent {
+		Nothing = 0,
 		LeftPressed = WM_LBUTTONDOWN,
 		RightPressed = WM_RBUTTONDOWN,
 		LeftReleased = WM_LBUTTONUP,
@@ -93,7 +98,7 @@ namespace hdg {
 	//num1, num2 - possible integer values, can be used to store native event data. By default they should be 0
 	//handle - handle to window, which send the event, can be NULL
 	struct Event {
-		EventType type;
+		hdg::EventType type;
 
 		int num1;
 		int num2;
@@ -101,6 +106,8 @@ namespace hdg {
 		hdg::MouseEvent mouse;
 
 		HWND handle;
+
+		hdg::Application* app;
 	};
 
 	/*============== Widgets ================*/
@@ -119,6 +126,8 @@ namespace hdg {
 			width = _width;
 			height = _height;
 
+			window = NULL;
+
 			open = false;
 
 			instance = this;
@@ -127,7 +136,7 @@ namespace hdg {
 		}
 
 		int run() {
-			DWORD dwStyle= (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX);
+			DWORD dwStyle= (WS_OVERLAPPEDWINDOW);
 
 			window = CreateWindow(
 				HDG_CLASSNAME,
@@ -147,7 +156,6 @@ namespace hdg {
 			{
 				_fatal("Failed to create window!");
 			}
-
 
 			ShowWindow(window, SW_SHOW);
 			UpdateWindow(window);
@@ -200,11 +208,42 @@ namespace hdg {
 						GET_X_LPARAM(lParam),
 						GET_Y_LPARAM(lParam),
 						static_cast<hdg::MouseEvent>(msg),
-						hwnd
+						hwnd,
+						this
 					};
 					postEvent(ev);
 					break;
 				}
+				//Move and size events
+				case WM_MOVE: {
+					hdg::Event ev = {
+						hdg::EventType::Moved,
+						(int)(short) LOWORD(lParam),
+						(int)(short) HIWORD(lParam),
+						hdg::MouseEvent::Nothing,
+						hwnd,
+						this
+					};
+					this->x = ev.num1;
+					this->y = ev.num2;
+					postEvent(ev);
+					break;
+				}
+				case WM_SIZE: {
+					hdg::Event ev = {
+						hdg::EventType::Resized,
+						(int)(short) LOWORD(lParam),
+						(int)(short) HIWORD(lParam),
+						hdg::MouseEvent::Nothing,
+						hwnd,
+						this
+					};
+					this->width = ev.num1;
+					this->height = ev.num2;
+					postEvent(ev);
+					break;
+				}
+
 				default:
 					return DefWindowProc(hwnd, msg, wParam, lParam);
 				}
@@ -224,12 +263,29 @@ namespace hdg {
 			return y;
 		}
 
+		void moveTo(int newX, int newY) {
+			x = newX;
+			y = newY;
+
+			if (SetWindowPos(window, (HWND) -1, newX, newY, -1, -1, SWP_NOZORDER | SWP_NOSIZE) == 0) {
+				_reportLastError("moveTo()");
+			}
+		}
+
+		void moveBy(int dX, int dY) {
+			moveTo(x+dX, y+dY);
+		}
+
 		int getWidth() {
 			return width;
 		}
 
 		int getHeight() {
 			return height;
+		}
+
+		HWND getNativeHandle() {
+			return window;
 		}
 
 		static Application *instance;
@@ -239,6 +295,12 @@ namespace hdg {
 		void _fatal(std::string msg) {
 			MessageBox(NULL, msg.c_str(), "Headgets Error", MB_SYSTEMMODAL | MB_OK | MB_ICONERROR);
 			ExitProcess(0);
+		}
+
+		void _reportLastError(std::string func) {
+			std::string text = "";
+			text = func+" call failed, GetLastError() = "+std::to_string(GetLastError());
+			MessageBox(NULL, text.c_str(), "Headgets Error", MB_SYSTEMMODAL | MB_OK | MB_ICONERROR);
 		}
 
 		//Registers Win32 window class.
@@ -275,6 +337,8 @@ namespace hdg {
 			ev.handle = wnd;
 			ev.num1 = n1;
 			ev.num2 = n2;
+			ev.mouse = hdg::MouseEvent::Nothing;
+			ev.app = this;
 
 
 			if (eventCallback) eventCallback(ev);

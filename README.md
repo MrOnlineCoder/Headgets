@@ -78,26 +78,96 @@ void myCallback(hdg::Event ev) {
 
 ### All available events:
 
+**hdg::Event** structure:
+```cpp
+struct Event {
+  hdg::EventType type;
+
+  int num1;
+  int num2;
+
+  hdg::MouseEvent mouse;
+
+  HWND handle;
+
+  hdg::Application* app;
+};
+```
+
 **hdg::EventType::Created**
-* called on window **creation**
+* sent on window **creation**
 * num1 is 0, num2 is 0
 * hwnd is created window handle
+* app is pointer to hdg::Application
 
 **hdg::EventType::Closed**
-* called when Close (X) button is clicked
+* sent when Close (X) button is clicked
 * num1 is 0, num2 is 0
 * hwnd is window handle
+* app is pointer to hdg::Application
 
 **hdg::EventType::Destroyed**
-* called when window was **destroyed**
+* sent when window was **destroyed**
 * num1 is 0, num2 is 0,
 * hwnd is NULL
+* app is pointer to hdg::Application
+
+**hdg::EventType::Moved**
+* sent when window is moved
+* num1 is window X position, num2 is window Y position
+* hwnd is window handle
+* app is pointer to hdg::Application
+
+**hdg::EventType::Resized**
+* sent when window is resized
+* num1 is new window width, num2 is new window height
+* hwnd is window handle
+* app is pointer to hdg::Application
 
 **hdg::EventType::MouseEvent**
-* called on mouse event (click or move)
+* sent on mouse event (click or move)
 * num1 is mouse X position, num2 is mouse Y position
 * mouse field shows which button was pressed or released.
 * hwnd is window handle
+* app is pointer to hdg::Application
+
+## Methods
+
+```cpp
+void hdg::Application::setUserCallback(std::function<void(hdg::Event)> func);
+```
+Sets event callback for Application.
+
+```cpp
+int hdg::Application::getX();
+```
+Returns current window X position
+
+```cpp
+int hdg::Application::getY();
+```
+Returns current window Y position
+
+```cpp
+int hdg::Application::getWidth();
+```
+Returns current window width
+
+```cpp
+int hdg::Application::getHeight();
+```
+Returns current window height
+
+```cpp
+void hdg::Application::moveTo(int newX, int newY);
+```
+Moves window to newX and newY position.
+
+```cpp
+void hdg::Application::moveBy(int dX, int dY);
+```
+Moves window by delta X and delta Y. Same as
+moveTo(x+dX, y+dY);
 
 
 ## Utilites
