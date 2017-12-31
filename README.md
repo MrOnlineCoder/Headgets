@@ -184,6 +184,62 @@ void hdg::Application::setTitle(std::string title);
 ```
 Sets window title
 
+```cpp
+void hdg::Application::close();
+```
+Closes the window
+
+## Widgets
+
+Widgets are different controls in the window: buttons, label, text boxes. Headgets has some of them.
+
+To create a widget, you just need to initialize widget instance.
+
+**Warning! ** Widgets depend on hdg::Application instance, so you must create your hdg::Application **before** creating any widgets.
+
+Example:
+
+```cpp
+hdg::Application app(hInstance, "Hello World", 800, 600);
+
+hdg::Label label("Hello World!"); //that's all
+
+app.run();
+```
+
+Every widget has 4 methods:
+
+```cpp
+void hdg::Widget::show();
+```
+Shows the widget
+
+```cpp
+void hdg::Application::hide();
+```
+Hides the widget
+
+```cpp
+void hdg::Application::setPosition(int x, int y);
+```
+Sets widget position (relative to parent window)
+
+```cpp
+void hdg::Application::setSize(int w, int h);
+```
+Sets widget size
+
+### All available widgets:
+
+**hdg::Label(std::string text)**
+
+Simple static label (text).
+
+```cpp
+void hdg::Label::setText(std::string text);
+```
+Sets label text
+
 ## Utilites
 
 **Show a message box**
@@ -197,6 +253,7 @@ hdg::showMessageBox(std::string text, std::string title,
 ```
 
 You can omit last 3 arguments, then message will use **"Information"** as title, **hdg::MessageBoxType::Information** as type and **hdg::MessageBoxButtons::Ok** as buttons.
+
 
 ## Warning
 If you are planning to create cross-platform applications with complex UI, I **highly** recommend using any popular and stable UI framework like [Qt](https://www.qt.io/), [wxWidgets](https://www.wxwidgets.org/) or [GTK](https://www.gtk.org/) instead of Headgets. This library was developed for personal use as an hobby project.

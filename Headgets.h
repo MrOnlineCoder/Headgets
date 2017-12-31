@@ -41,6 +41,8 @@
 #include <string>
 #include <functional>
 
+#include <cassert>
+
 namespace hdg {
 	//Win32 window class name, used in RegisterClassEx
 	const char* HDG_CLASSNAME = "HEADGETSWINDOW";
@@ -110,17 +112,15 @@ namespace hdg {
 		hdg::Application* app;
 	};
 
-	/*============== Widgets ================*/
-
-	class Widget {
-		Widget();
-	};
-
 
 	/*============== Application ============*/
 	class Application {
 	public:
 		Application(HINSTANCE _instance, std::string _title, int _width, int _height) {
+			if (instance != NULL) {
+				_fatal("Only 1 instance of hdg::Application is allowed at any time. Destruct the another one.");
+			}
+
 			hinstance = _instance;
 			title = _title;
 			width = _width;
@@ -133,12 +133,10 @@ namespace hdg {
 			instance = this;
 
 			registerWindowClass();
-		}
 
-		int run() {
 			DWORD dwStyle= (WS_OVERLAPPEDWINDOW);
 
-			window = CreateWindow(
+			this->window = CreateWindow(
 				HDG_CLASSNAME,
 				title.c_str(),
 				dwStyle,
@@ -156,7 +154,13 @@ namespace hdg {
 			{
 				_fatal("Failed to create window!");
 			}
+		}
 
+		~Application() {
+			instance = NULL;
+		}
+
+		int run() {
 			ShowWindow(window, SW_SHOW);
 			UpdateWindow(window);
 
@@ -261,7 +265,7 @@ namespace hdg {
 			y = newY;
 
 			if (SetWindowPos(window, (HWND) -1, x, y, -1, -1, SWP_NOZORDER | SWP_NOSIZE) == 0) {
-				_reportLastError("moveTo()");
+				hdg::Application::_reportLastError("Application::moveTo()");
 			}
 		}
 
@@ -285,9 +289,19 @@ namespace hdg {
 			return open;
 		}
 
+		void close() {
+			SendMessage(window, WM_CLOSE, 0, 0);
+		}
+
 		void setTitle(std::string str) {
 			title = str;
 			SetWindowText(window, title.c_str());
+		}
+
+		static void _reportLastError(std::string func) {
+			std::string text = "";
+			text = func+" call failed, GetLastError() = "+std::to_string(GetLastError());
+			MessageBox(NULL, text.c_str(), "Headgets Error", MB_SYSTEMMODAL | MB_OK | MB_ICONERROR);
 		}
 
 		static Application *instance;
@@ -297,12 +311,6 @@ namespace hdg {
 		void _fatal(std::string msg) {
 			MessageBox(NULL, msg.c_str(), "Headgets Error", MB_SYSTEMMODAL | MB_OK | MB_ICONERROR);
 			ExitProcess(0);
-		}
-
-		void _reportLastError(std::string func) {
-			std::string text = "";
-			text = func+" call failed, GetLastError() = "+std::to_string(GetLastError());
-			MessageBox(NULL, text.c_str(), "Headgets Error", MB_SYSTEMMODAL | MB_OK | MB_ICONERROR);
 		}
 
 		//Registers Win32 window class.
@@ -373,6 +381,70 @@ namespace hdg {
 		//Event callback
 		//Used to send user (library user) an hdg::Event so he can process it.
 		std::function<void(hdg::Event)> eventCallback;
+	};
+	
+	/*============== Widgets ================*/
+
+	class Widget {
+	public:
+		Widget(HWND _parent) {
+			assert(_parent != NULL);
+
+			parent = _parent;
+			hinstance = (HINSTANCE) GetWindowLong (parent, GWL_HINSTANCE);
+		}
+
+		Widget(Application* app) {
+			assert(app != NULL);
+
+			parent = app->getNativeHandle();
+			hinstance = (HINSTANCE) GetWindowLong (parent, GWL_HINSTANCE);
+		}
+
+		void hide() {
+			ShowWindow(window, SW_HIDE);
+		}
+
+		void show() {
+			ShowWindow(window, SW_SHOW);
+		}
+
+		void setPosition(int x, int y) {
+			if (SetWindowPos(window, (HWND) -1, x, y, -1, -1, SWP_NOZORDER | SWP_NOSIZE) == 0) {
+				hdg::Application::_reportLastError("Widget::setPosition()");
+			}
+		}
+
+		void setSize(int w, int h) {
+			if (SetWindowPos(window, (HWND) -1, -1, w, h, -1, SWP_NOZORDER | SWP_NOMOVE) == 0) {
+				hdg::Application::_reportLastError("Widget::setSize()");
+			}
+		}
+	protected:
+		HWND parent;
+		HWND window;
+
+		HINSTANCE hinstance;
+	};
+
+	class Label : public hdg::Widget {
+	public:
+		Label(std::string _text)
+		: Widget(hdg::Application::instance){
+			text = _text;
+
+			window = CreateWindow("STATIC", text.c_str(),  WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 100, 50, parent, NULL, hinstance, NULL);
+
+			if (window == NULL) hdg::Application::_reportLastError("Label::Label()");
+		}
+
+
+		void setText(std::string txt) {
+			text = txt;
+			SetWindowText(window, text.c_str());
+		}
+	private:
+		std::string text;
 	};
 
 	//Instance of the application
