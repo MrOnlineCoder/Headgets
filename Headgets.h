@@ -35,6 +35,14 @@
 #error Headgets library supports only Windows platform
 #endif
 
+/*================== Headgets Configuration ==============*/
+
+//If defined, Headgets will use Common Controls library (version 6)
+
+#define HDG_USE_COMMONCTRLS 1
+
+/*========================================================*/
+
 #include <Windows.h>
 #include <Windowsx.h>
 
@@ -43,11 +51,21 @@
 
 #include <cassert>
 
+#ifdef HDG_USE_COMMONCTRLS
+
+//Require CommonControls ver. 6
+#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#pragma comment( lib, "comctl32.lib" )
+
+#include <CommCtrl.h>
+#endif
+
 namespace hdg {
 	//Win32 window class name, used in RegisterClassEx
 	const char* HDG_CLASSNAME = "HEADGETSWINDOW";
 
-	//Forward declartion
+	bool comctrlsInitalized = false;
+
 	class Application;
 
 	/*============== Utility ===========*/
@@ -73,6 +91,18 @@ namespace hdg {
 		MessageBox(NULL, text.c_str(), caption.c_str(), static_cast<UINT>(type) | static_cast<UINT>(buttons) );
 	}
 
+	static SIZE computeTextSize(HWND wnd, std::string str) {
+		HDC hdc = GetDC(wnd); 
+		SIZE size;
+		if (GetTextExtentPoint32(hdc, str.c_str(), str.size(), &size) == TRUE) {
+			return size;
+		} else {
+			size.cx = 0;
+			size.cy = 0;
+			return size;
+		}
+	}
+
 	/*============== Events ============*/
 	enum class EventType {
 		Created = 0,
@@ -81,6 +111,7 @@ namespace hdg {
 		Moved,
 
 		MouseEvent,
+		Command,
 
 		Closed,
 		Destroyed
@@ -121,10 +152,25 @@ namespace hdg {
 				_fatal("Only 1 instance of hdg::Application is allowed at any time. Destruct the another one.");
 			}
 
+			#ifdef HDG_USE_COMMONCTRLS
+			if (!comctrlsInitalized) {
+				INITCOMMONCONTROLSEX cmcex;
+				cmcex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+				cmcex.dwICC = ICC_LINK_CLASS | ICC_NATIVEFNTCTL_CLASS | ICC_PROGRESS_CLASS | ICC_STANDARD_CLASSES;
+				if (InitCommonControlsEx(&cmcex) == FALSE) {
+					_reportLastError("InitCommonControlsEx() ");
+				} else {
+					comctrlsInitalized = true;
+				}
+			}
+			#endif
+			
 			hinstance = _instance;
 			title = _title;
 			width = _width;
 			height = _height;
+
+			nextId = 1;
 
 			window = NULL;
 
@@ -240,6 +286,10 @@ namespace hdg {
 					postEvent(ev);
 					break;
 				}
+				case WM_COMMAND: {
+					postSimpleEvent(hdg::EventType::Command, hwnd, LOWORD(wParam), 0);
+					break;
+				}
 
 				default:
 					return DefWindowProc(hwnd, msg, wParam, lParam);
@@ -296,6 +346,12 @@ namespace hdg {
 		void setTitle(std::string str) {
 			title = str;
 			SetWindowText(window, title.c_str());
+		}
+
+		UINT getNextControlID() {
+			UINT id = WM_USER + nextId;
+			nextId++;
+			return id;
 		}
 
 		static void _reportLastError(std::string func) {
@@ -378,6 +434,8 @@ namespace hdg {
 		//Is window open?
 		bool open;
 
+		UINT nextId;
+
 		//Event callback
 		//Used to send user (library user) an hdg::Event so he can process it.
 		std::function<void(hdg::Event)> eventCallback;
@@ -394,8 +452,10 @@ namespace hdg {
 			hinstance = (HINSTANCE) GetWindowLong (parent, GWL_HINSTANCE);
 		}
 
-		Widget(Application* app) {
-			assert(app != NULL);
+		Widget(Application* _app) {
+			assert(_app != NULL);
+
+			app = _app;
 
 			parent = app->getNativeHandle();
 			hinstance = (HINSTANCE) GetWindowLong (parent, GWL_HINSTANCE);
@@ -416,7 +476,7 @@ namespace hdg {
 		}
 
 		void setSize(int w, int h) {
-			if (SetWindowPos(window, (HWND) -1, -1, w, h, -1, SWP_NOZORDER | SWP_NOMOVE) == 0) {
+			if (SetWindowPos(window, (HWND) -1, -1, -1, w, h, SWP_NOZORDER | SWP_NOMOVE) == 0) {
 				hdg::Application::_reportLastError("Widget::setSize()");
 			}
 		}
@@ -424,20 +484,21 @@ namespace hdg {
 		HWND parent;
 		HWND window;
 
+		Application* app;
+
 		HINSTANCE hinstance;
 	};
 
 	class Label : public hdg::Widget {
 	public:
-		Label(std::string _text)
+		Label(std::string _text, int x=0, int y=0)
 		: Widget(hdg::Application::instance){
 			text = _text;
 
-			window = CreateWindow("STATIC", text.c_str(),  WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 100, 50, parent, NULL, hinstance, NULL);
+			window = CreateWindow("STATIC", text.c_str(),  WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 100, 50, parent, NULL, hinstance, NULL);
 
 			if (window == NULL) hdg::Application::_reportLastError("Label::Label()");
 		}
-
 
 		void setText(std::string txt) {
 			text = txt;
@@ -445,6 +506,49 @@ namespace hdg {
 		}
 	private:
 		std::string text;
+	};
+
+	class Button : public hdg::Widget {
+	public:
+		Button(std::string _text, int x=0, int y=0)
+		: Widget(hdg::Application::instance){
+			text = _text;
+
+			id = app->getNextControlID();
+
+			window = CreateWindow("BUTTON", text.c_str(),  WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 100, 50, parent, (HMENU) id, hinstance, NULL);
+
+			if (window == NULL) hdg::Application::_reportLastError("Button::Button()");
+		}
+
+		void setText(std::string txt) {
+			text = txt;
+			SetWindowText(window, text.c_str());
+
+			SIZE sz = hdg::computeTextSize(window, text);
+
+			setSize(sz.cx+50, sz.cy+14);
+		}
+
+		void disable() {
+			EnableWindow(window, FALSE);
+		}
+
+		void enable() {
+			EnableWindow(window, TRUE);
+		}
+
+		void setDisabled(bool arg) {
+			EnableWindow(window, (BOOL) arg);
+		}
+
+		UINT getID() {
+			return id;
+		}
+	private:
+		std::string text;
+
+		int id;
 	};
 
 	//Instance of the application

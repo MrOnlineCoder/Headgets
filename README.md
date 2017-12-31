@@ -88,7 +88,7 @@ struct Event {
 
   hdg::MouseEvent mouse;
 
-  HWND handle;
+  handle handle;
 
   hdg::Application* app;
 };
@@ -97,38 +97,60 @@ struct Event {
 **hdg::EventType::Created**
 * sent on window **creation**
 * num1 is 0, num2 is 0
-* hwnd is created window handle
+* handle is created window handle
 * app is pointer to hdg::Application
 
 **hdg::EventType::Closed**
 * sent when Close (X) button is clicked
 * num1 is 0, num2 is 0
-* hwnd is window handle
+* handle is window handle
 * app is pointer to hdg::Application
 
 **hdg::EventType::Destroyed**
 * sent when window was **destroyed**
 * num1 is 0, num2 is 0,
-* hwnd is NULL
+* handle is NULL
 * app is pointer to hdg::Application
 
 **hdg::EventType::Moved**
 * sent when window is moved
 * num1 is window X position, num2 is window Y position
-* hwnd is window handle
+* handle is window handle
 * app is pointer to hdg::Application
 
 **hdg::EventType::Resized**
 * sent when window is resized
 * num1 is new window width, num2 is new window height
-* hwnd is window handle
+* handle is window handle
 * app is pointer to hdg::Application
+
+**hdg::EventType::Command**
+* event fired when any control sends a notification
+* num1 is control ID, num2 is 0
+* mouse field is hdg::MouseEvent::Nothing
+* handle is window handle
+* app is pointer to hdg::Application
+
+Example on handling hdg::Button click event:
+
+```cpp
+hdg::Button button("My Button", 100, 100);
+
+//Event callback
+if (ev.type == hdg::EventType::Command) {
+		if (ev.num1 == button.getID()) {
+			//button was clicked, do something
+		}
+}
+
+
+```
 
 **hdg::EventType::MouseEvent**
 * sent on mouse event (click or move)
 * num1 is mouse X position, num2 is mouse Y position
 * mouse field shows which button was pressed or released.
-* hwnd is window handle
+* handle is window handle
 * app is pointer to hdg::Application
 
 ## Methods
@@ -170,9 +192,9 @@ Moves window by delta X and delta Y. Same as
 moveTo(x+dX, y+dY);
 
 ```cpp
-HWND hdg::Application::getNativeHandle();
+handle hdg::Application::getNativeHandle();
 ```
-Returns native Win32 HWND window handle
+Returns native Win32 handle window handle
 
 ```cpp
 bool hdg::Application::isOpen();
@@ -220,18 +242,18 @@ void hdg::Application::hide();
 Hides the widget
 
 ```cpp
-void hdg::Application::setPosition(int x, int y);
+void hdg::Widget::setPosition(int x, int y);
 ```
 Sets widget position (relative to parent window)
 
 ```cpp
-void hdg::Application::setSize(int w, int h);
+void hdg::Widget::setSize(int w, int h);
 ```
 Sets widget size
 
-### All available widgets:
+## All available widgets:
 
-**hdg::Label(std::string text)**
+### hdg::Label(std::string text, int x = 0, int y = 0)
 
 Simple static label (text).
 
@@ -239,6 +261,35 @@ Simple static label (text).
 void hdg::Label::setText(std::string text);
 ```
 Sets label text
+
+### hdg::Button(std::string text, int x = 0, int y = 0)
+
+Push button widget.
+
+```cpp
+void hdg::Button::setText(std::string text);
+```
+Sets button text
+
+```cpp
+void hdg::Button::enable();
+```
+Enables the button
+
+```cpp
+void hdg::Button::disable();
+```
+Disables the button
+
+```cpp
+void hdg::Button::setDisabled(bool arg);
+```
+Sets button disabled state.
+
+```cpp
+int hdg::Button::getID();
+```
+Returns button control ID (used in Command event)
 
 ## Utilites
 
