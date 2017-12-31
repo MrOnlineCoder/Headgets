@@ -195,7 +195,7 @@ Widgets are different controls in the window: buttons, label, text boxes. Headge
 
 To create a widget, you just need to initialize widget instance.
 
-**Warning! ** Widgets depend on hdg::Application instance, so you must create your hdg::Application **before** creating any widgets.
+**Warning!** Widgets depend on hdg::Application instance, so you must create your hdg::Application **before** creating any widgets.
 
 Example:
 
@@ -255,7 +255,7 @@ hdg::showMessageBox(std::string text, std::string title,
 You can omit last 3 arguments, then message will use **"Information"** as title, **hdg::MessageBoxType::Information** as type and **hdg::MessageBoxButtons::Ok** as buttons.
 
 
-## Warning
+## Disclaimer
 If you are planning to create cross-platform applications with complex UI, I **highly** recommend using any popular and stable UI framework like [Qt](https://www.qt.io/), [wxWidgets](https://www.wxwidgets.org/) or [GTK](https://www.gtk.org/) instead of Headgets. This library was developed for personal use as an hobby project.
 
 ## License:
