@@ -503,11 +503,11 @@ namespace hdg {
 
 	class Label : public hdg::Widget {
 	public:
-		Label(std::string _text, int x=0, int y=0)
+		Label(std::string _text, int x=0, int y=0, int w=100, int h=50)
 		: Widget(hdg::Application::instance){
 			text = _text;
 
-			window = CreateWindow("STATIC", text.c_str(),  WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 100, 50, parent, NULL, hinstance, NULL);
+			window = CreateWindow("STATIC", text.c_str(),  WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, w, h, parent, NULL, hinstance, NULL);
 
 			if (window == NULL) _reportLastError("Label::Label() => CreateWindow");
 		}
@@ -531,6 +531,8 @@ namespace hdg {
 			window = CreateWindow("BUTTON", text.c_str(),  WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 100, 50, parent, (HMENU) id, hinstance, NULL);
 
 			if (window == NULL) _reportLastError("Button::Button() => CreateWindow");
+
+			setText(text);
 		}
 
 		void setText(std::string txt) {
@@ -604,6 +606,10 @@ namespace hdg {
 
 		void setReadonly(bool arg) {
 			SendMessage(window, EM_SETREADONLY, (BOOL) arg, 0);
+		}
+
+		bool isEmpty() {
+			return value().size() == 0;
 		}
 	};
 
