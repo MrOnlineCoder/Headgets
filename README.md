@@ -9,6 +9,21 @@ Headgets (**Head**er only wid**gets** library) is header-only library for buildi
 * Features built-in widgets
 * Has built-in useful utility functions
 
+## Contents
+
+1. [Getting Started](#getting-started)
+2. [Creating a window](#creating-a-window)
+3. [Events](#handling-events)
+4. [Event types](#all-available-events)
+5. [Main application methods](#methods)
+6. [Widgets introduction](#widgets)
+7. [Widgets list](#all-available-widgets)
+8. [Label widget](#label)
+9. [Button widget](#button)
+10. [Editbox widget](#editbox)
+11. [Utilities](#utilites)
+12. [License](#license)
+
 ## Getting Started
 
 Include **Headgets.h** file in your C++ project:
@@ -76,7 +91,7 @@ void myCallback(hdg::Event ev) {
 }
 ```
 
-### All available events:
+### All available events
 
 **hdg::Event** structure:
 ```cpp
@@ -253,18 +268,29 @@ Sets widget size
 
 ## All available widgets:
 
-### hdg::Label(std::string text, int x = 0, int y = 0)
+
+### Label
 
 Simple static label (text).
+
+```cpp
+hdg::Label(std::string text, int x = 0, int y = 0)
+```
+Constructor
 
 ```cpp
 void hdg::Label::setText(std::string text);
 ```
 Sets label text
 
-### hdg::Button(std::string text, int x = 0, int y = 0)
-
+### Button
 Push button widget.
+
+```cpp
+hdg::Button(std::string text, int x = 0, int y = 0)
+```
+Constructor
+
 
 ```cpp
 void hdg::Button::setText(std::string text);
@@ -291,6 +317,58 @@ int hdg::Button::getID();
 ```
 Returns button control ID (used in Command event)
 
+### Editbox
+
+Editable textbox.
+
+```cpp
+hdg::Editbox(unsigned int style, int x, int y, int w, int h)
+```
+Constructor
+
+You can omit all arguments in constructor:
+
+```cpp
+hdg::Editbox edit();
+```
+
+While specifying style argument you can set multiple styles using bitwise OR (|) operator:
+
+```cpp
+hdg::Editbox edit(hdg::EditboxStyle::Uppercase | hdg::EditboxStyle::Password);
+```
+
+Available styles (hdg::EditboxStyle::):
+
+* None - default style
+* Center - center-align text in editbox
+* Left - left-align text
+* Lowercase - all characters will be converted into lowercase
+* Uppercase - all characters will be converted into uppercase
+* Multiline - creates multiline editbox
+* Number - only digits are allowed to be entered into editbox
+* Password - replaces all characters with dots
+* Right - right-aligns editbox text
+
+```cpp
+void hdg::Editbox::setText(std::string txt);
+```
+
+Sets editbox text.
+
+```cpp
+std::string hdg::Editbox::value();
+```
+
+Returns editbox value as std::string.
+
+```cpp
+void hdg::Editbox::setReadonly(bool arg);
+```
+
+Toggles readonly mode of editbox.
+
+
 ## Utilites
 
 **Show a message box**
@@ -305,6 +383,14 @@ hdg::showMessageBox(std::string text, std::string title,
 
 You can omit last 3 arguments, then message will use **"Information"** as title, **hdg::MessageBoxType::Information** as type and **hdg::MessageBoxButtons::Ok** as buttons.
 
+
+**Get environment variable**
+
+You can environment variable as std::string using:
+
+```cpp
+const std::string getEnvironmentVariable(const std::string var);
+```
 
 ## Disclaimer
 If you are planning to create cross-platform applications with complex UI, I **highly** recommend using any popular and stable UI framework like [Qt](https://www.qt.io/), [wxWidgets](https://www.wxwidgets.org/) or [GTK](https://www.gtk.org/) instead of Headgets. This library was developed for personal use as an hobby project.

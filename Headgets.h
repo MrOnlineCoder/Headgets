@@ -48,6 +48,7 @@
 
 #include <string>
 #include <functional>
+#include <map>
 
 #include <cassert>
 
@@ -69,6 +70,13 @@ namespace hdg {
 	class Application;
 
 	/*============== Utility ===========*/
+
+	static void _reportLastError(std::string func) {
+		std::string text = "";
+		text = func+" call failed, GetLastError() = "+std::to_string(GetLastError());
+		MessageBox(NULL, text.c_str(), "Headgets Error", MB_SYSTEMMODAL | MB_OK | MB_ICONERROR);
+	}
+
 	enum class MessageBoxType {
 		Empty = 0,
 		Information = MB_ICONINFORMATION,
@@ -101,6 +109,16 @@ namespace hdg {
 			size.cy = 0;
 			return size;
 		}
+	}
+
+	const std::string getEnvironmentVariable(const std::string var) {
+		char buffer[MAX_PATH];
+		if (GetEnvironmentVariable(var.c_str(), &buffer[0], MAX_PATH) == 0) {
+			_reportLastError("getEnvironmentVariable() => GetEnvironmentVariable ");
+			return "";
+		}
+
+		return std::string(buffer);
 	}
 
 	/*============== Events ============*/
@@ -315,7 +333,7 @@ namespace hdg {
 			y = newY;
 
 			if (SetWindowPos(window, (HWND) -1, x, y, -1, -1, SWP_NOZORDER | SWP_NOSIZE) == 0) {
-				hdg::Application::_reportLastError("Application::moveTo()");
+				_reportLastError("Application::moveTo()");
 			}
 		}
 
@@ -352,12 +370,6 @@ namespace hdg {
 			UINT id = WM_USER + nextId;
 			nextId++;
 			return id;
-		}
-
-		static void _reportLastError(std::string func) {
-			std::string text = "";
-			text = func+" call failed, GetLastError() = "+std::to_string(GetLastError());
-			MessageBox(NULL, text.c_str(), "Headgets Error", MB_SYSTEMMODAL | MB_OK | MB_ICONERROR);
 		}
 
 		static Application *instance;
@@ -471,13 +483,13 @@ namespace hdg {
 
 		void setPosition(int x, int y) {
 			if (SetWindowPos(window, (HWND) -1, x, y, -1, -1, SWP_NOZORDER | SWP_NOSIZE) == 0) {
-				hdg::Application::_reportLastError("Widget::setPosition()");
+				_reportLastError("Widget::setPosition()");
 			}
 		}
 
 		void setSize(int w, int h) {
 			if (SetWindowPos(window, (HWND) -1, -1, -1, w, h, SWP_NOZORDER | SWP_NOMOVE) == 0) {
-				hdg::Application::_reportLastError("Widget::setSize()");
+				_reportLastError("Widget::setSize()");
 			}
 		}
 	protected:
@@ -497,7 +509,7 @@ namespace hdg {
 
 			window = CreateWindow("STATIC", text.c_str(),  WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 100, 50, parent, NULL, hinstance, NULL);
 
-			if (window == NULL) hdg::Application::_reportLastError("Label::Label()");
+			if (window == NULL) _reportLastError("Label::Label() => CreateWindow");
 		}
 
 		void setText(std::string txt) {
@@ -518,7 +530,7 @@ namespace hdg {
 
 			window = CreateWindow("BUTTON", text.c_str(),  WS_CHILD | WS_VISIBLE | WS_TABSTOP, x, y, 100, 50, parent, (HMENU) id, hinstance, NULL);
 
-			if (window == NULL) hdg::Application::_reportLastError("Button::Button()");
+			if (window == NULL) _reportLastError("Button::Button() => CreateWindow");
 		}
 
 		void setText(std::string txt) {
@@ -549,6 +561,50 @@ namespace hdg {
 		std::string text;
 
 		int id;
+	};
+
+	class EditboxStyle {
+	public:
+		const static UINT None = 0x0; 
+		const static UINT Center = ES_CENTER;
+		const static UINT Left = ES_LEFT;
+		const static UINT Lowercase = ES_LOWERCASE;
+		const static UINT Multiline = ES_MULTILINE;
+		const static UINT Number = ES_NUMBER;
+		const static UINT Password = ES_PASSWORD;
+		const static UINT Right = ES_RIGHT;
+		const static UINT Uppercase = ES_UPPERCASE;
+	};
+
+	class Editbox : public hdg::Widget {
+	public:
+		Editbox(UINT st = hdg::EditboxStyle::None, int x=0, int y=0, int w=100, int h=14)
+		: Widget(hdg::Application::instance){
+
+			window = CreateWindow("EDIT", "",  WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | (UINT) (st), x, y, w, h+14, parent, NULL, hinstance, NULL);
+
+			if (window == NULL) _reportLastError("Editbox::Editbox() => CreateWindow");
+		}
+
+		void setText(std::string txt) {
+			SetWindowText(window, txt.c_str());
+		}
+
+		std::string value() {
+			int sz = GetWindowTextLength(window) + 1;
+
+			char* rstr = new char[sz];
+			GetWindowText(window, rstr, sz);
+
+			std::string val(rstr);
+			delete [] rstr;
+
+			return val;
+		}
+
+		void setReadonly(bool arg) {
+			SendMessage(window, EM_SETREADONLY, (BOOL) arg, 0);
+		}
 	};
 
 	//Instance of the application
