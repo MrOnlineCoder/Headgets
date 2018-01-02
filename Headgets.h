@@ -77,6 +77,13 @@ namespace hdg {
 		MessageBox(NULL, text.c_str(), "Headgets Error", MB_SYSTEMMODAL | MB_OK | MB_ICONERROR);
 	}
 
+	//Shows fatal error message and exits the application
+	//TODO: more polite error handling
+	static void _fatal(std::string msg) {
+		MessageBox(NULL, msg.c_str(), "Headgets Error", MB_SYSTEMMODAL | MB_OK | MB_ICONERROR);
+		ExitProcess(0);
+	}
+
 	enum class MessageBoxType {
 		Empty = 0,
 		Information = MB_ICONINFORMATION,
@@ -120,6 +127,124 @@ namespace hdg {
 
 		return std::string(buffer);
 	}
+
+	namespace FileFilters {
+		const static char* AllFiles = "All Files\0*.*\0\0";
+		const static char* TextFiles = "Text Files\0*.txt\0\0";
+		const static char* ImageFiles = "Images\0*.jpg;*.png;*.bmp\0\0";
+		const static char* VideoFiles = "Video files\0*.mp4;*.avi\0\0";
+		const static char* AudioFiles = "Audio files\0*.mp3;*.ogg;*.wav;*.flac\0\0";
+		const static char* ExecutableFiles = "Executables\0*.exe";
+		const static char* DLLFiles = "DLLs\0*.dll\0\0";
+	};
+
+	class OpenDialog {
+	public:
+		OpenDialog() {
+			filename[0] = '\0';
+
+			ctx.lStructSize = sizeof(ctx);
+			ctx.hwndOwner = NULL;
+			ctx.hInstance = GetModuleHandle(NULL);
+			ctx.lpstrFilter = "All Files\0*.*\0\0";
+			ctx.lpstrCustomFilter = NULL;
+			ctx.nMaxCustFilter = 0;
+			ctx.nFilterIndex = 1;
+			ctx.lpstrFile = &filename[0];
+			ctx.nMaxFile = MAX_PATH;
+			ctx.lpstrFileTitle = NULL;
+			ctx.lpstrInitialDir = NULL;
+			ctx.lpstrTitle = NULL;
+			ctx.Flags = OFN_EXPLORER;
+			ctx.lpstrDefExt = NULL;
+			ctx.FlagsEx = 0;
+		}
+
+		void setRawFilter(const char* str) {
+			filter = str;
+			ctx.lpstrFilter = str;
+		}
+
+		void setTitle(std::string _title) {
+			title = _title;
+			ctx.lpstrTitle = title.c_str();
+		}
+
+		void setInitialPath(std::string dir) {
+			initPath = dir;
+			ctx.lpstrInitialDir = initPath.c_str();
+		}
+
+		bool open() {
+			return GetOpenFileName(&ctx) != 0;
+		}
+
+		const std::string getFilename() {
+			return std::string(filename);
+		}
+	private:
+		OPENFILENAME ctx;
+
+		std::string filter;
+		std::string title;
+		std::string initPath;
+
+		char filename[MAX_PATH];
+	};
+
+	class SaveDialog {
+	public:
+		SaveDialog() {
+			filename[0] = '\0';
+
+			ctx.lStructSize = sizeof(ctx);
+			ctx.hwndOwner = NULL;
+			ctx.hInstance = GetModuleHandle(NULL);
+			ctx.lpstrFilter = "All Files\0*.*\0\0";
+			ctx.lpstrCustomFilter = NULL;
+			ctx.nMaxCustFilter = 0;
+			ctx.nFilterIndex = 1;
+			ctx.lpstrFile = &filename[0];
+			ctx.nMaxFile = MAX_PATH;
+			ctx.lpstrFileTitle = NULL;
+			ctx.lpstrInitialDir = NULL;
+			ctx.lpstrTitle = NULL;
+			ctx.Flags = OFN_EXPLORER;
+			ctx.lpstrDefExt = NULL;
+			ctx.FlagsEx = 0;
+		}
+
+		void setRawFilter(const char* str) {
+			filter = str;
+			ctx.lpstrFilter = str;
+		}
+
+		void setTitle(std::string _title) {
+			title = _title;
+			ctx.lpstrTitle = title.c_str();
+		}
+
+		void setInitialPath(std::string dir) {
+			initPath = dir;
+			ctx.lpstrInitialDir = initPath.c_str();
+		}
+
+		bool open() {
+			return GetSaveFileName(&ctx) != 0;
+		}
+
+		const std::string getFilename() {
+			return std::string(filename);
+		}
+	private:
+		OPENFILENAME ctx;
+
+		std::string filter;
+		std::string title;
+		std::string initPath;
+
+		char filename[MAX_PATH];
+	};
 
 	/*============== Events ============*/
 	enum class EventType {
@@ -374,12 +499,6 @@ namespace hdg {
 
 		static Application *instance;
 	private:
-		//Shows fatal error message and exits the application
-		//TODO: more polite error handling
-		void _fatal(std::string msg) {
-			MessageBox(NULL, msg.c_str(), "Headgets Error", MB_SYSTEMMODAL | MB_OK | MB_ICONERROR);
-			ExitProcess(0);
-		}
 
 		//Registers Win32 window class.
 		void registerWindowClass() {
@@ -471,6 +590,10 @@ namespace hdg {
 
 			parent = app->getNativeHandle();
 			hinstance = (HINSTANCE) GetWindowLong (parent, GWL_HINSTANCE);
+		}
+
+		~Widget() {
+			DestroyWindow(window);
 		}
 
 		void hide() {
@@ -612,6 +735,69 @@ namespace hdg {
 			return value().size() == 0;
 		}
 	};
+
+	class Progressbar : public hdg::Widget {
+	public:
+		Progressbar(bool isMarquee, int x=0, int y=0, int w=100, int h=14)
+		: Widget(hdg::Application::instance){
+
+			int style = isMarquee ? PBS_MARQUEE : 0x0;
+
+			if (!comctrlsInitalized) _fatal("Progressbar widgets is avaliable only with Common Controls!");
+			window = CreateWindow(PROGRESS_CLASS, "",  WS_CHILD | WS_VISIBLE | WS_TABSTOP | style , x, y, w, h+14, parent, NULL, hinstance, NULL);
+
+			if (window == NULL) _reportLastError("Progressbar::Progressbar() => CreateWindow");
+
+			min = 0;
+			max = 100;
+			barStep = 10;
+			marquee = isMarquee;
+		}
+
+		void setRange(int _min, int _max) {
+			if (marquee) return;
+
+			min = _min;
+			max = _max;
+
+			SendMessage(window, PBM_SETRANGE, 0, MAKEWORD(min, max));
+		}
+
+		void setStep(int _step) {
+			if (marquee) return;
+
+			barStep = _step;
+
+			SendMessage(window, PBM_SETSTEP, _step, 0);
+		}
+
+		void step(int amount=0) {
+			if (marquee) return;
+
+			if (amount != 0) {
+				SendMessage(window, PBM_DELTAPOS, amount, 0);
+			} else {
+				SendMessage(window, PBM_STEPIT, 0, 0);
+			}
+		}
+
+		void toggleMarquee(bool mode, int time=30) {
+			if (!marquee) return;
+
+			if (!mode) {
+				SendMessage(window, PBM_SETMARQUEE, FALSE, 0);
+			} else {
+				SendMessage(window, PBM_SETMARQUEE, TRUE, time);
+			}
+		}
+	private:
+		int min;
+		int max;
+		int barStep;
+
+		bool marquee;
+	};
+
 
 	//Instance of the application
 	Application * Application::instance = NULL;

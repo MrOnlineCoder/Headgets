@@ -11,7 +11,11 @@ public:
 			
 			editDesc = new hdg::Label("Example of password field:", 200, 10, 200);
 			edit = new hdg::Editbox(hdg::EditboxStyle::Password, 400, 10, 200);
-			editTest = new hdg::Button("Get password value", 200, 40);
+			editTest = new hdg::Button("Get password value", 200, 50);
+
+			bombBtn = new hdg::Button("Open file and destroy", 100, 90);
+
+			bar = new hdg::Progressbar(false, 10, 125, 660, 20);
 
 			//Set event callback
 			app.setUserCallback(std::bind(&TestApp::eventCallback, this, std::placeholders::_1));
@@ -19,15 +23,35 @@ public:
 
 	void eventCallback(hdg::Event ev) {
 		if (ev.type == hdg::EventType::Command) {
+
+			//ev.num1 holds control ID
+			//So we can use it for determining - which control sent the event
+
 			if (ev.num1 == button->getID()) {
 				hdg::showMessageBox("You clicked the button!");
 				app.setTitle("Headgets Test application - already clicked");
 				button->disable();
+				bar->step();
 				return;
 			}
 
 			if (ev.num1 == editTest->getID()) {
 				hdg::showMessageBox("Entered password is: "+edit->value());
+				bar->step();
+				return;
+			}
+
+			if (ev.num1 == bombBtn->getID()) {
+				bar->step();
+
+				hdg::OpenDialog dlg;
+				dlg.setTitle("Select an image file");
+				dlg.setRawFilter(hdg::FileFilters::ImageFiles);
+				if (dlg.open()) {
+					hdg::showMessageBox("You choosed file: "+dlg.getFilename());
+				}				
+
+				delete bombBtn;
 			}
 		}
 	}
@@ -44,6 +68,9 @@ private:
 
 	hdg::Label* editDesc;
 	hdg::Button* editTest;
+
+	hdg::Button* bombBtn;
+	hdg::Progressbar* bar;
 };
 
 int CALLBACK WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {

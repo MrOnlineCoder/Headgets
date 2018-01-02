@@ -371,7 +371,7 @@ Toggles readonly mode of editbox.
 
 ## Utilites
 
-**Show a message box**
+### Show a message box
 
 You can show a message box using next function:
 ```cpp
@@ -384,13 +384,48 @@ hdg::showMessageBox(std::string text, std::string title,
 You can omit last 3 arguments, then message will use **"Information"** as title, **hdg::MessageBoxType::Information** as type and **hdg::MessageBoxButtons::Ok** as buttons.
 
 
-**Get environment variable**
+### Get environment variable
 
 You can environment variable as std::string using:
 
 ```cpp
 const std::string getEnvironmentVariable(const std::string var);
 ```
+
+### Open/save dialog
+
+**hdg::OpenDialog** and **hdg::SaveDialog** are helper classes for opening system "Save" or "Open" dialogs for browsing files.
+
+Methods (apply for both Save and Open dialogs):
+
+```cpp
+void hdg::OpenDialog::setRawFilter(const char* str);
+```
+Sets file filter. Optional. str must end in double null-characters and each item must be separated by one null character:
+
+Example: **Text files\0*.txt;*.rtf\0\0**
+
+```cpp
+void hdg::OpenDialog::setTitle(std::string title);
+```
+Sets dialog title. Optional
+
+```cpp
+void hdg::OpenDialog::setInitialPath(std::string dir);
+```
+Sets dialog initial path. Optional.
+
+```cpp
+bool hdg::OpenDialog::open()
+```
+Opens the file dialog and returns true if user successfully selected a file, false otherwise.
+
+**Note:** calling all prepartion methods (setTitle, setInitialPath, etc) will affect dialog only if they were called **before** opening the dialog.
+
+```cpp
+const std::string hdg::OpenDialog::getFilename()
+```
+Returns filename, which user selected in a dialog.
 
 ## Disclaimer
 If you are planning to create cross-platform applications with complex UI, I **highly** recommend using any popular and stable UI framework like [Qt](https://www.qt.io/), [wxWidgets](https://www.wxwidgets.org/) or [GTK](https://www.gtk.org/) instead of Headgets. This library was developed for personal use as an hobby project.
