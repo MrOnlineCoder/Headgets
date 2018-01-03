@@ -31,15 +31,20 @@
 #ifndef _HEADGETS_H
 #define _HEADGETS_H
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(_WIN64)
 #error Headgets library supports only Windows platform
 #endif
 
 /*================== Headgets Configuration ==============*/
 
-//If defined, Headgets will use Common Controls library (version 6)
-
+// If defined, Headgets will use Common Controls library (version 6)
+// Without common controls, Progressbar widget is not avaliable.
 #define HDG_USE_COMMONCTRLS 1
+
+
+// Visual C++ only: If defined, comctl32.lib will be added to linker's input using #pragma directive (along with manifest for using Common Controls 6.0
+// Comment if you are using GCC or just want to link library by yourself.
+#define HDG_PRAGMA_COMMONCTRLS 1
 
 /*========================================================*/
 
@@ -54,11 +59,14 @@
 
 #ifdef HDG_USE_COMMONCTRLS
 
+#include <CommCtrl.h>
+
+#if defined(_MSC_VER) && defined(HDG_PRAGMA_COMMONCTRLS)
 //Require CommonControls ver. 6
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #pragma comment( lib, "comctl32.lib" )
+#endif
 
-#include <CommCtrl.h>
 #endif
 
 namespace hdg {
