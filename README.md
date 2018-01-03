@@ -369,6 +369,38 @@ void hdg::Editbox::setReadonly(bool arg);
 Toggles readonly mode of editbox.
 
 
+### Progressbar
+
+Typical widget used to display progress of some action.
+
+```cpp
+hdg::Progressbar::Progressbar(bool isMarquee, int x=0, int y=0, int w=100, int h=14)
+```
+
+Constructor. If isMarquee is true, progress bar will show some type of activity but won't show progress of task.
+
+```cpp
+void hdg::Progressbar::setRange(int min, int max)
+```
+Sets progress bar range. Does nothing if marquee style is on.
+
+
+```cpp
+void hdg::Progressbar::setStep(int step)
+```
+Sets progress bar step. Default step value is 10.
+
+```cpp
+void hdg::Progressbar::step(int count=0)
+```
+Advances progress by count. If count is 0, step value is used.
+
+```cpp
+void hdg::Progressbar::toggleMarquee(bool mode, int time=30)
+```
+Toggles marquee mode. time determines how fast progress bar part should move across the bar (in milliseconds).
+
+
 ## Utilites
 
 ### Show a message box
@@ -386,7 +418,7 @@ You can omit last 3 arguments, then message will use **"Information"** as title,
 
 ### Get environment variable
 
-You can environment variable as std::string using:
+You can get environment variable as std::string using:
 
 ```cpp
 const std::string getEnvironmentVariable(const std::string var);
