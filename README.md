@@ -21,8 +21,10 @@ Headgets (**Head**er only wid**gets** library) is header-only library for buildi
 8. [Label widget](#label)
 9. [Button widget](#button)
 10. [Editbox widget](#editbox)
-11. [Utilities](#utilites)
-12. [License](#license)
+11. [Progressbar widget](#progressbar)
+12. [Utilities](#utilites)
+13. [File dialogs](#file-dialogs)
+14. [License](#license)
 
 ## Getting Started
 
@@ -291,6 +293,7 @@ hdg::Button(std::string text, int x = 0, int y = 0)
 ```
 Constructor
 
+---
 
 ```cpp
 void hdg::Button::setText(std::string text);
@@ -350,6 +353,8 @@ Available styles (hdg::EditboxStyle::):
 * Password - replaces all characters with dots
 * Right - right-aligns editbox text
 
+---
+
 ```cpp
 void hdg::Editbox::setText(std::string txt);
 ```
@@ -378,6 +383,8 @@ hdg::Progressbar::Progressbar(bool isMarquee, int x=0, int y=0, int w=100, int h
 ```
 
 Constructor. If isMarquee is true, progress bar will show some type of activity but won't show progress of task.
+
+---
 
 ```cpp
 void hdg::Progressbar::setRange(int min, int max)
@@ -424,7 +431,7 @@ You can get environment variable as std::string using:
 const std::string getEnvironmentVariable(const std::string var);
 ```
 
-### Open/save dialog
+### File dialogs
 
 **hdg::OpenDialog** and **hdg::SaveDialog** are helper classes for opening system "Save" or "Open" dialogs for browsing files.
 
@@ -436,6 +443,31 @@ void hdg::OpenDialog::setRawFilter(const char* str);
 Sets file filter. Optional. str must end in double null-characters and each item must be separated by one null character:
 
 Example: **Text files\0*.txt;*.rtf\0\0**
+
+There are some built-in common filters in **hdg::FileFilters**:
+
+* hdg::FileFilters::AllFiles - all files (default dialog filter)
+* hdg::FileFilters::TextFiles - .txt files
+* hdg::FileFilters::ImageFiles - .jpg, .png, .bmp files
+* hdg::FileFilters::VideoFiles - .mp4, .avi
+* hdg::FileFilters::AudioFiles - .mp3, .ogg, .wav, .flac
+* hdg::FileFilters::ExecutableFiles - .exe
+* hdg::FileFilters::DLLFiles - .dll
+
+Example:
+
+```cpp
+hdg::OpenDialog dialog;
+dialog.setRawFilter(hdg::FileFilters::ImageFiles);
+dialog.setTitle("Select an image for uploading");
+
+if (dialog.open()) {
+	//you code goes here
+	process_file_from_dialog(dialog.getFilename());
+}
+
+```
+---
 
 ```cpp
 void hdg::OpenDialog::setTitle(std::string title);
