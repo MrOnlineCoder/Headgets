@@ -580,7 +580,90 @@ namespace hdg {
 		std::function<void(hdg::Event)> eventCallback;
 	};
 	
+	enum FontWeight {
+		Default = FW_DONTCARE,
+		Thin = FW_THIN,
+		Extralight = FW_EXTRALIGHT,
+		Light = FW_LIGHT,
+		Normal = FW_NORMAL,
+		Medium = FW_MEDIUM,
+		Semibold = FW_SEMIBOLD, 
+		Bold = FW_BOLD,
+		Extrabold = FW_EXTRABOLD,
+		Heavy = FW_HEAVY
+	};
+
+	class Font {
+	public:
+		Font(const std::string family, int weight=FontWeight::Default, int size = 0, bool italic=false) {
+			this->family = family;
+			this->weight = weight;
+			this->italic = italic;
+			this->size = size;
+
+			this->underline = false;
+			this->striked = false;
+		}
+
+		void setItalic(bool arg) {
+			italic = arg;
+		}
+
+		void setStriked(bool arg) {
+			striked = arg;
+		}
+
+		void setUnderline(bool arg) {
+			underline = arg;
+		}
+
+		void setSize(int sz) {
+			size = sz;
+		}
+
+		void setWeight(int arg) {
+			weight = arg;
+		}
+
+		void setFamily(const std::string arg) {
+			family = arg;
+		}
+
+		HFONT createHandle() {
+			hf = CreateFont(
+				size, // Title font size
+				0, // Width (default is used)
+				0, //0 now
+				0, // 0 now
+				weight, //weight
+				(BOOL) italic, //Is italic?
+				(BOOL) underline, //Is underlined?
+				(BOOL) striked, //Is striked out?
+				ANSI_CHARSET, //Charset
+				OUT_DEFAULT_PRECIS, //Default precision
+				CLIP_DEFAULT_PRECIS, //Default
+				DEFAULT_QUALITY, //Default quality
+				DEFAULT_PITCH | FF_SWISS, //?
+				family.c_str() // Font family
+			);
+
+			if (hf == NULL) _reportLastError("Font::createHandle() => CreateFont");
+
+			return hf;
+		}
+	private:
+		HFONT hf;
+
+		std::string family;
+		int weight;
+		bool italic;
+		bool underline;
+		bool striked;
+		int size;
+	};
+
 	/*============== Widgets ================*/
+
 
 	class Widget {
 	public:
@@ -623,6 +706,16 @@ namespace hdg {
 				_reportLastError("Widget::setSize()");
 			}
 		}
+
+		void setFont(hdg::Font& font) {
+			HFONT hf = font.createHandle();
+			if (hf == NULL) {
+				return;
+			}
+
+
+			SendMessage(window, WM_SETFONT, (WPARAM) hf, TRUE);
+		} 
 	protected:
 		HWND parent;
 		HWND window;
@@ -768,7 +861,7 @@ namespace hdg {
 			min = _min;
 			max = _max;
 
-			SendMessage(window, PBM_SETRANGE, 0, MAKEWORD(min, max));
+			SendMessage(window, PBM_SETRANGE, 0, MAKELPARAM(min, max));
 		}
 
 		void setStep(int _step) {

@@ -16,6 +16,8 @@ public:
 			bombBtn = new hdg::Button("Open file and destroy", 100, 90);
 
 			bar = new hdg::Progressbar(false, 10, 125, 660, 20);
+			hdg::Font font("Arial", hdg::FontWeight::Bold, 18, true);
+			editDesc->setFont(font);
 
 			//Set event callback
 			app.setUserCallback(std::bind(&TestApp::eventCallback, this, std::placeholders::_1));

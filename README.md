@@ -433,6 +433,39 @@ void hdg::Progressbar::toggleMarquee(bool mode, int time=30)
 ```
 Toggles marquee mode. time determines how fast progress bar part should move across the bar (in milliseconds).
 
+### Fonts
+
+You can change widget text font using hdg::Font class.
+
+```cpp
+hdg::Font::Font(const std::string family, int weight=FontWeight::Default, int size = 0, bool italic=false)
+```
+
+Where:
+* family is font family
+* weight is weight of font. You can use predefined values from hdg::FontWeight enum.
+* size - font size
+* italic - should font be italic?
+
+hdg::Font has setters for each of theese params plus 1 function for setting underline style:
+
+```cpp
+hdg::Font::setUnderline(bool arg);
+```
+---
+
+Apply font to widget using setFont method:
+```cpp
+hdg::Wigdet::setFont(hdg::Font font);
+```
+Example:
+
+```cpp
+hdg::Label myLabel("Font test", 100, 100);
+hdg::Font font("Arial", hdg::FontWeight::Bold, 18, true);
+myLabel.setFont(font);
+```
+Will create bold Arial font with 18 characters' size and italic style and apply it to previously created myLabel Label widget.
 
 ## Utilites
 
