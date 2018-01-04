@@ -5,7 +5,7 @@ Headgets (**Head**er only wid**gets** library) is header-only library for buildi
 ## Features
 
 * Header-only
-* No dependecies, only native Win32 API
+* No third-party dependecies, only native Win32 API
 * Features built-in widgets
 * Has built-in useful utility functions
 
@@ -33,6 +33,32 @@ Include **Headgets.h** file in your C++ project:
 ```cpp
 #include "Headgets.h"
 ```
+
+Headgets require Win32 Common Controls library for some widgets (Progressbar for example). You can force Headgets not to use of Common Controls by commenting/removing **HDG_USE_COMMONCTRLS** macro on line 42.
+
+**Visual C++**:
+
+You can manually link Common Controls library to your project (comctl32.lib) through Project -> Properties: <Project Name> -> Configurations -> Linker -> Input -> Additional Dependecies. Also you need to add manifest value to your project.
+
+**or**
+
+you can make Headgets link it automatically using #pragma directives. Make sure that definition of  **HDG_PRAGMA_COMMONCTRLS** macro on line 47 is not commented, then Headgets will automatically link Common Controls (along with manifest addition):
+
+```cpp
+#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#pragma comment( lib, "comctl32.lib" )
+```
+
+**MinGW / GCC**:
+
+You have to pass -l parameter to linker manually:
+
+```
+-lcomctl32
+```
+
+Furthermore, for using Common Controls version 6, you need to add manifest to your project.
+[Nice guide on using Common Controls with GCC](http://geekthis.net/post/visual-styles-in-win32-api-c-gcc-mingw/)
 
 All Headgets classes and functions lie in **hdg** namespace.
 
