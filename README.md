@@ -22,9 +22,10 @@ Headgets (**Head**er only wid**gets** library) is header-only library for buildi
 9. [Button widget](#button)
 10. [Editbox widget](#editbox)
 11. [Progressbar widget](#progressbar)
-12. [Utilities](#utilites)
-13. [File dialogs](#file-dialogs)
-14. [License](#license)
+12. [Fonts](#fonts)
+13. [Utilities](#utilites)
+14. [File dialogs](#file-dialogs)
+15. [License](#license)
 
 ## Getting Started
 
